@@ -1,0 +1,85 @@
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="orden_trabajo_tree">
+            <field name="name">orden.trabajo.tree</field>
+            <field name="model">orden.trabajo</field>
+            <field name="arch" type="xml">
+                <tree string="Ordenes">
+                    <field name="name"/>
+                    <field name="fecha"/>
+                    <field name="sale_id"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="orden_trabajo_form">
+            <field name="name">orden.trabajo.form</field>
+            <field name="model">orden.trabajo</field>
+            <field name="arch" type="xml">
+                <form string="Ordenes">
+                    <header>
+                        <button name="confirmar" states="draft" string="Confirmar" class="btn-primary o_sale_confirm" type="object" />
+<!--                        <button name="cancelar" states="confirm" string="Cancelar" class="btn-primary o_sale_confirm" type="object" />-->
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirm"/>
+                    </header>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sale_id"/>
+                        </group>
+                        <group>
+                            <field name="fecha"/>
+                            <field name="stock_picking_type_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Cortes">
+                            <field name="corte_ids">
+                                <tree string="Lineas" editable="bottom">
+                                    <field name="lote_id"/>
+                                    <field name="product_id"/>
+                                    <field name="corte1"/>
+                                    <field name="corte2"/>
+                                    <field name="corte3"/>
+                                    <field name="corte4"/>
+                                    <field name="corte5"/>
+                                    <field name="corte6"/>
+                                    <field name="total"/>
+                                    <field name="sobra"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Molduras y páneles">
+                            <field name="moldura_panel_ids">
+                                <tree string="Lineas" editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="cantidad"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Tornillería y accesorios">
+                            <field name="tornilleria_accesorio_ids">
+                                <tree string="Lineas" editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="cantidad"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="orden_trabajo.orden_trabajo_action_window">
+            <field name="name">Ordenes de trabajo</field>
+            <field name="res_model">orden.trabajo</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem name="Ordenes trabajo" id="orden_trabajo.menu_root"/>
+        <menuitem name="Ordenes" id="orden_trabajo_list" parent="orden_trabajo.menu_root" action="orden_trabajo.orden_trabajo_action_window"/>
+
+    </data>
+</openerp>
