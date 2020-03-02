@@ -78,8 +78,16 @@
             <field name="view_mode">tree,form</field>
         </record>
 
+<!--
         <menuitem name="Ordenes trabajo" id="orden_trabajo.menu_root"/>
         <menuitem name="Ordenes" id="orden_trabajo_list" parent="orden_trabajo.menu_root" action="orden_trabajo.orden_trabajo_action_window"/>
+-->
+        <menuitem name="Ordenes de trabajo" 
+            id="orden_trabajo_orden_trabajo_menu" 
+            parent="mrp.menu_mrp_manufacturing" 
+            action="orden_trabajo.orden_trabajo_action_window"
+            groups="mrp.group_mrp_manager"
+            sequence="30"/>
 
     </data>
 </openerp>

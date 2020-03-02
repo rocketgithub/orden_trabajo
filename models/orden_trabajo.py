@@ -82,7 +82,7 @@ class OrdenTrabajo(models.Model):
 
                 if productos[product_id]['cortes'][corte]['tipo'] == 'nuevo':
                     lineas_so.append((0, 0, {
-                        'name': '[' + linea.product_id.default_code + ']' + ' ' + linea.product_id.name + ' - ' + str(corte),
+                        'name': linea.product_id.name_get()[0][1] + ' - ' + str(corte),
                         'product_id': product_id,
                         'price_unit': productos[product_id]['cortes'][corte]['precio'],
                         'product_uom_qty': productos[product_id]['cortes'][corte]['cantidad'],

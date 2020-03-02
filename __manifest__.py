@@ -18,5 +18,6 @@
 
     'data': [
         'views/orden_trabajo_views.xml',
+        'security/ir.model.access.csv',
     ],
 }
