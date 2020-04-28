@@ -8,6 +8,13 @@ import logging
 class OrdenTrabajo(models.Model):
     _name = 'orden.trabajo'
 
+    def _buscar_lote_por_largo(self, product_id, largo):
+        lote = self.env['stock.production.lot'].search([('product_id', '=', product_id),('largo', '=', largo)])
+        if lote:
+            return lote[0]
+        else:
+            return False
+    
     def confirmar(self):
 
         for linea in self.corte_ids:
@@ -22,12 +29,12 @@ class OrdenTrabajo(models.Model):
                 'name': '/',
                 'product_id': linea.lote_id.product_id.id,
                 'product_uom': linea.lote_id.product_id.uom_id.id,
-                'product_uom_qty': 1,
+                'product_uom_qty': linea.product_qty,
                 'location_id': self.sale_id.warehouse_id.lot_stock_id.id,
                 'location_dest_id': linea.lote_id.product_id.property_stock_production.id,
                 'state': 'draft',
             }))
-            lote_ids.append(linea.lote_id.id)
+            lote_ids.append({'id': linea.lote_id.id, 'qty': linea.product_qty})
 
             if linea.lote_id.product_id.id not in productos:
                 productos[linea.lote_id.product_id.id] = {'ubicacion_produccion_id': linea.lote_id.product_id.property_stock_production.id, 'uom_id': linea.lote_id.product_id.uom_id.id, 'cortes': {}}
@@ -36,43 +43,43 @@ class OrdenTrabajo(models.Model):
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.corte2
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.corte3
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.corte4
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.corte5
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.corte6
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'nuevo'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
             corte = linea.sobra
             if corte != 0:
                 if corte not in productos[linea.lote_id.product_id.id]['cortes']:
                     productos[linea.lote_id.product_id.id]['cortes'][corte] = {'precio': linea.lote_id.product_id.list_price, 'cantidad': 0, 'tipo': 'sobra'}
-                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += 1
+                productos[linea.lote_id.product_id.id]['cortes'][corte]['cantidad'] += linea.product_qty
 
         lineas_so = []
         lineas_albaran_entrada = []
@@ -110,8 +117,8 @@ class OrdenTrabajo(models.Model):
             albaran_salida.action_assign()
             x = 0
             for operation in albaran_salida.pack_operation_product_ids:
-                operation.pack_lot_ids[0].lot_id = lote_ids[x]
-                operation.pack_lot_ids[0].qty = 1
+                operation.pack_lot_ids[0].lot_id = lote_ids[x]['id']
+                operation.pack_lot_ids[0].qty = lote_ids[x]['qty']
                 operation.save()
                 x += 1
             albaran_salida.do_new_transfer()
@@ -133,13 +140,21 @@ class OrdenTrabajo(models.Model):
 
                 lineas_lote = []
                 for corte in productos[operation.product_id.id]['cortes']:
-                    secuencia = self.env['ir.sequence'].next_by_code('stock.lot.serial')
+                    lote = self._buscar_lote_por_largo(operation.product_id.id, corte)
+                    if lote:
+                        secuencia = lote.name
+                        lineas_lote.append((0, 0, {
+                            'lot_id': lote.id,
+                            'qty': productos[product_id]['cortes'][corte]['cantidad'],
+                        }))
+                    else:
+                        secuencia = self.env['ir.sequence'].next_by_code('stock.lot.serial') + ' - ' + str(corte)
+                        lineas_lote.append((0, 0, {
+                            'lot_name': secuencia,
+                            'qty': productos[product_id]['cortes'][corte]['cantidad'],
+                        }))
                     secuencias_nombre.append(secuencia)
                     secuencias_largo[secuencia] = corte
-                    lineas_lote.append((0, 0, {
-                        'lot_name': secuencia,
-                        'qty': productos[product_id]['cortes'][corte]['cantidad'],
-                    }))
                 operation.pack_lot_ids = lineas_lote
                 operation.save()
             albaran_entrada.do_new_transfer()
@@ -197,6 +212,7 @@ class OrdenTrabajoCortes(models.Model):
     orden_id = fields.Many2one("orden.trabajo", string='Orden de trabajo', required=True)
     lote_id = fields.Many2one("stock.production.lot", string='Lote', required=True)
     product_id = fields.Many2one(related='lote_id.product_id', string="Producto", store=True, readonly=True)
+    product_qty = fields.Float(string='Cantidad', digits=dp.get_precision('Product Unit of Measure'), required=True)
     corte1 = fields.Float("Corte 1", required=True)
     corte2 = fields.Float("Corte 2", required=True)
     corte3 = fields.Float("Corte 3", required=True)
