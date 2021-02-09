@@ -145,13 +145,13 @@ class OrdenTrabajo(models.Model):
                         secuencia = lote.name
                         lineas_lote.append((0, 0, {
                             'lot_id': lote.id,
-                            'qty': productos[product_id]['cortes'][corte]['cantidad'],
+                            'qty': productos[operation.product_id.id]['cortes'][corte]['cantidad'],
                         }))
                     else:
                         secuencia = self.env['ir.sequence'].next_by_code('stock.lot.serial') + ' - ' + str(corte)
                         lineas_lote.append((0, 0, {
                             'lot_name': secuencia,
-                            'qty': productos[product_id]['cortes'][corte]['cantidad'],
+                            'qty': productos[operation.product_id.id]['cortes'][corte]['cantidad'],
                         }))
                     secuencias_nombre.append(secuencia)
                     secuencias_largo[secuencia] = corte
