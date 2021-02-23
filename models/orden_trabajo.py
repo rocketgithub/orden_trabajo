@@ -117,8 +117,14 @@ class OrdenTrabajo(models.Model):
             albaran_salida.action_assign()
             x = 0
             for operation in albaran_salida.pack_operation_product_ids:
-                operation.pack_lot_ids[0].lot_id = lote_ids[x]['id']
-                operation.pack_lot_ids[0].qty = lote_ids[x]['qty']
+                existe_lot_id = False
+                for pack_lot in operation.pack_lot_ids:
+                    if pack_lot.lot_id.id == lote_ids[x]['id']:
+                        pack_lot.qty = lote_ids[x]['qty']
+                        existe_lot_id = True
+                if not existe_lot_id:
+                    operation.pack_lot_ids[0].lot_id = lote_ids[x]['id']
+                    operation.pack_lot_ids[0].qty = lote_ids[x]['qty']
                 operation.save()
                 x += 1
             albaran_salida.do_new_transfer()
