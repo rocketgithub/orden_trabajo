@@ -16,6 +16,8 @@ class OrdenTrabajo(models.Model):
             return False
     
     def confirmar(self):
+        if not self.sale_id.partner_id.property_stock_customer:
+            raise UserError('El contacto no tiene ubicación de cliente definida.')
 
         for linea in self.corte_ids:
             if linea.total > linea.lote_id.largo:
@@ -101,7 +103,7 @@ class OrdenTrabajo(models.Model):
                     'product_uom': productos[product_id]['uom_id'],
                     'product_uom_qty': productos[product_id]['cortes'][corte]['cantidad'],
                     'location_id': productos[product_id]['ubicacion_produccion_id'],
-                    'location_dest_id': self.sale_id.warehouse_id.lot_stock_id.id,
+                    'location_dest_id': self.sale_id.partner_id.property_stock_customer.id,
                     'state': 'draft',
                 }))
 
@@ -133,12 +135,12 @@ class OrdenTrabajo(models.Model):
         if len(lineas_albaran_entrada) > 0:
             albaran_entrada = self.env['stock.picking'].create({
                 'location_id': productos[product_id]['ubicacion_produccion_id'],
-                'location_dest_id': self.sale_id.warehouse_id.lot_stock_id.id,
+                'location_dest_id': self.sale_id.partner_id.property_stock_customer.id,
                 'picking_type_id': self.stock_picking_type_id.id,
             })
 
             albaran_entrada.move_lines = lineas_albaran_entrada
-            albaran_entrada.action_confirm()
+#            albaran_entrada.action_confirm()
 
             secuencias_nombre = []
             secuencias_largo = {}
