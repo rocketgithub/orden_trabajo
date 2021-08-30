@@ -140,7 +140,7 @@ class OrdenTrabajo(models.Model):
             })
 
             albaran_entrada.move_lines = lineas_albaran_entrada
-#            albaran_entrada.action_confirm()
+            albaran_entrada.action_confirm()
 
             secuencias_nombre = []
             secuencias_largo = {}
